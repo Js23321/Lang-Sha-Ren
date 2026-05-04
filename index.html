@@ -1,1 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lang Ren Sha</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #12121a;
+      --card:      #1a1a26;
+      --border:    #2e2e45;
+      --gold:      #c9a84c;
+      --gold-dim:  #7a6030;
+      --red:       #cc3333;
+      --red-dim:   #5a1a1a;
+      --teal:      #2ab8b8;
+      --teal-dim:  #0d4444;
+      --text:      #e8e0d0;
+      --muted:     #7a7090;
+      --wolf-glow: 0 0 24px #cc333355, 0 0 60px #cc333322;
+      --gold-glow: 0 0 16px #c9a84c44;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Pro', Georgia, serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 15% 20%, #ffffff22 0%, transparent 100%),
+        radial-gradient(1px 1px at 40% 60%, #ffffff18 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 15%, #ffffff20 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 75%, #ffffff15 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 40%, #ffffff12 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 85%, #ffffff18 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 40%, #ffffff10 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 60% 80%, #c9a84c18 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 10% 50%, #c9a84c14 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 0 16px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .site-header {
+      width: 100%;
+      text-align: center;
+      padding: 40px 0 24px;
+    }
+
+    .site-header .eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 6px;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .site-header h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(26px, 7vw, 38px);
+      font-weight: 700;
+      color: var(--gold);
+      text-shadow: var(--gold-glow);
+      line-height: 1.1;
+    }
+
+    .site-header .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+      font-style: italic;
+      letter-spacing: 1px;
+    }
+
+    .divider {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 6px 0 28px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-dim));
+    }
+    .divider::after { background: linear-gradient(to left, transparent, var(--gold-dim)); }
+    .divider-icon { color: var(--gold-dim); font-size: 14px; }
+
+    #game {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #game::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .phase-banner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .phase-label {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 5px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .phase-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .phase-title.night { color: #8888dd; text-shadow: 0 0 20px #4444aa66; }
+    .phase-title.day   { color: var(--gold); text-shadow: var(--gold-glow); }
+    .phase-title.wolf  { color: var(--red); text-shadow: var(--wolf-glow); }
+    .phase-title.win   { color: var(--teal); text-shadow: 0 0 24px #2ab8b855; }
+
+    .player-card {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .player-card .player-label {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .player-card .player-name {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .player-card .player-role {
+      font-size: 13px;
+      color: var(--gold);
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .lives-row {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 6px;
+    }
+    .life-pip {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 6px var(--red);
+    }
+    .life-pip.dead { background: #333; box-shadow: none; }
+
+    .game-msg {
+      font-size: 17px;
+      color: var(--text);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    .game-msg strong { color: var(--gold); font-weight: 600; }
+    .game-msg em { color: var(--muted); font-style: italic; }
+
+    .section-label {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      align-self: flex-start;
+    }
+
+    .ability-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .ability-used { text-decoration: line-through; opacity: 0.4; }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #ffffff08 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .btn:hover {
+      border-color: var(--gold-dim);
+      color: var(--gold);
+      background: #1e1e2e;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px #00000044;
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    .btn.primary {
+      border-color: var(--gold-dim);
+      background: linear-gradient(135deg, #1e1a0e, #12120a);
+      color: var(--gold);
+      box-shadow: var(--gold-glow);
+    }
+
+    .btn.primary:hover {
+      background: linear-gradient(135deg, #2a2212, #1a1808);
+      box-shadow: 0 0 24px #c9a84c55;
+    }
+
+    .btn.danger {
+      border-color: #5a2020;
+      background: linear-gradient(135deg, #1e0e0e, #120a0a);
+      color: #cc6666;
+    }
+
+    .btn.danger:hover {
+      border-color: var(--red);
+      color: var(--red);
+      box-shadow: var(--wolf-glow);
+    }
+
+    .btn.ghost {
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .btn.ghost:hover {
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn.wide { grid-column: 1 / -1; }
+
+    .status-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+    }
+
+    .status-row .sname { font-family: 'Cinzel', serif; font-size: 12px; }
+    .status-row .sbadge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+    }
+    .sbadge.alive { background: #0d2e1a; color: #4caf84; border: 1px solid #1a5c36; }
+    .sbadge.dead  { background: #1a0d0d; color: #7a4444; border: 1px solid #3a1818; }
+
+    .detect-result {
+      width: 100%;
+      text-align: center;
+      padding: 20px;
+      border-radius: 12px;
+      font-family: 'Cinzel', serif;
+    }
+    .detect-result.wolf {
+      background: var(--red-dim);
+      border: 1px solid var(--red);
+      color: #ff8888;
+    }
+    .detect-result.clear {
+      background: var(--teal-dim);
+      border: 1px solid var(--teal);
+      color: var(--teal);
+    }
+    .detect-result .dr-label { font-size: 10px; letter-spacing: 4px; margin-bottom: 6px; }
+    .detect-result .dr-verdict { font-size: 20px; font-weight: 600; }
+
+    .night-log {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-align: center;
+      font-size: 15px;
+      line-height: 2;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .win-screen {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .win-screen .win-icon { font-size: 48px; }
+    .win-screen .win-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 22px;
+    }
+    .win-screen .win-title.village { color: var(--teal); text-shadow: 0 0 24px #2ab8b855; }
+    .win-screen .win-title.wolf    { color: var(--red);  text-shadow: var(--wolf-glow); }
+    .win-screen .win-sub { font-size: 14px; color: var(--muted); font-style: italic; }
+
+    .role-lang-ren  { color: var(--red) !important; }
+    .role-nu-wu     { color: #b088cc !important; }
+    .role-bao-shou  { color: var(--teal) !important; }
+    .role-detective { color: #88aadd !important; }
+    .role-villager  { color: var(--gold) !important; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #game > * { animation: fadeIn 0.25s ease both; }
+
+    .name-inputs {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .name-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .name-field label {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .name-field input {
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 16px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s;
+      width: 100%;
+    }
+
+    .name-field input::placeholder { color: var(--muted); font-style: italic; }
+    .name-field input:focus { border-color: var(--gold-dim); }
+
+    .site-footer {
+      margin-top: 32px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      font-family: 'Cinzel', serif;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <header class="site-header">
+    <div class="eyebrow">The Hidden Role Game</div>
+    <h1>狼人殺</h1>
+    <div class="subtitle">Lang Ren Sha</div>
+  </header>
+
+  <div class="divider"><span class="divider-icon">✦</span></div>
+
+  <div id="game"></div>
+
+  <footer class="site-footer">✦ &nbsp; Pass &amp; Play &nbsp; ✦</footer>
+</div>
+
+<script>
+const game = document.getElementById("game");
+
+let players = ["Player 1","Player 2","Player 3"];
+let roles = ["Lang Ren","Nu Wu","Bao Shou","Detective","Villager","Villager"];
+
+let playerRoles = {};
+let currentRole = {};
+let lives = {};
+let alive = {};
+
+let actions = [];
+let turnIndex = 0;
+
+let tempAction = null;
+let detectiveTarget = null;
+
+let lastProtected = null;
+
+let nuwuSaveUsed = false;
+let nuwuPoisonUsed = false;
+
+let langRenAlive = true;
+
+// ---------- HELPERS ----------
+function roleIcon(r){
+  const icons = {"Lang Ren":"🐺","Nu Wu":"🧙‍♀️","Bao Shou":"🛡️","Detective":"🔍","Villager":"🧑‍🌾"};
+  return icons[r]||"❓";
+}
+
+function livePips(p){
+  const max = playerRoles[p]&&playerRoles[p].includes("Lang Ren") ? 1 : 2;
+  let html='<div class="lives-row">';
+  for(let i=0;i<max;i++){
+    html+=`<div class="life-pip${i<lives[p]?'':' dead'}"></div>`;
+  }
+  return html+'</div>';
+}
+
+// ---------- SHUFFLE ----------
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+}
+
+// ---------- START ----------
+function startGame(){
+  shuffle(roles);
+
+  playerRoles = {
+    [players[0]]:[roles[0],roles[1]],
+    [players[1]]:[roles[2],roles[3]],
+    [players[2]]:[roles[4],roles[5]]
+  };
+
+  players.forEach(p=>{
+    lives[p]=playerRoles[p].includes("Lang Ren")?1:2;
+    alive[p]=true;
+  });
+
+  nuwuSaveUsed=false;
+  nuwuPoisonUsed=false;
+  langRenAlive = true;
+
+  chooseRole(0);
+}
+
+// ---------- ROLE PICK ----------
+function chooseRole(i){
+  if(i>=players.length) return nightIntro();
+
+  let p = players[i];
+
+  // Waiting / handoff screen first
+  game.innerHTML = `
+    <div class="phase-banner">
+      <div class="phase-label">Pass the device to</div>
+      <div class="phase-title night">${p}</div>
+    </div>
+    <div class="game-msg"><em>Keep the screen hidden<br>until it is in your hands.</em></div>
+    <button class="btn primary wide" onclick="revealRole(${i})">I have the device →</button>
+  `;
+}
+
+function revealRole(i){
+  let p = players[i];
+  let r = playerRoles[p];
+
+  game.innerHTML = `
+    <div class="player-card">
+      <div class="player-label">Your name</div>
+      <div class="player-name">${p}</div>
+    </div>
+    <div class="game-msg">Choose your secret role</div>
+    <div class="btn-grid">
+      <button class="btn primary" onclick="setRole('${p}','${r[0]}',${i})">${roleIcon(r[0])} ${r[0]}</button>
+      <button class="btn primary" onclick="setRole('${p}','${r[1]}',${i})">${roleIcon(r[1])} ${r[1]}</button>
+    </div>
+  `;
+}
+
+function setRole(p,r,i){
+  currentRole[p]=r;
+  chooseRole(i+1);
+}
+
+// ---------- NIGHT ----------
+function nightIntro(){
+  actions=[];
+  turnIndex=0;
+
+  game.innerHTML=`
+    <div class="phase-banner">
+      <div class="phase-label">Phase</div>
+      <div class="phase-title night">🌙 Night</div>
+    </div>
+    <div class="game-msg"><em>The village falls asleep…<br>Roles awaken in secret.</em></div>
+    <button class="btn primary wide" onclick="nextTurn()">Begin Night</button>
+  `;
+}
+
+function nextTurn(){
+  if(turnIndex>=players.length) return resolveNight();
+
+  let p=players[turnIndex];
+  if(!alive[p]){ turnIndex++; return nextTurn(); }
+
+  game.innerHTML=`
+    <div class="phase-banner">
+      <div class="phase-label">Pass the device to</div>
+      <div class="phase-title night">${p}</div>
+    </div>
+    <div class="game-msg"><em>Cover the screen until ready.</em></div>
+    <button class="btn primary wide" onclick="doAction('${p}')">I am ready</button>
+  `;
+}
+
+// ---------- ACTION ROUTER ----------
+function doAction(p){
+  let role=currentRole[p];
+
+  if(role==="Lang Ren") wolf(p);
+  else if(role==="Bao Shou") guard(p);
+  else if(role==="Nu Wu") nuwu(p);
+  else if(role==="Detective") detective(p);
+  else { turnIndex++; nextTurn(); }
+}
+
+// ---------- CONFIRM ----------
+function confirmScreen(){
+  game.innerHTML=`
+    <div class="game-msg">Confirm your action?</div>
+    <div class="btn-grid">
+      <button class="btn primary" onclick="confirmYes()">✓ Confirm</button>
+      <button class="btn ghost" onclick="cancel()">← Back</button>
+    </div>
+  `;
+}
+
+function cancel(){
+  tempAction=null;
+  detectiveTarget=null;
+  nextTurn();
+}
+
+function confirmYes(){
+  if(tempAction.type==="save") nuwuSaveUsed=true;
+  if(tempAction.type==="poison") nuwuPoisonUsed=true;
+
+  actions.push(tempAction);
+  tempAction=null;
+  turnIndex++;
+  nextTurn();
+}
+
+// ---------- ROLES ----------
+function wolf(p){
+  let btns=players.filter(x=>alive[x])
+    .map(x=>`<button class="btn danger" onclick="setTemp('kill','${p}','${x}')">${x}</button>`).join("");
+
+  game.innerHTML=`
+    <div class="player-card">
+      <div class="player-label">Awaken</div>
+      <div class="player-name">${p}</div>
+      <div class="player-role role-lang-ren">🐺 Lang Ren</div>
+    </div>
+    <div class="section-label">Choose your kill target</div>
+    <div class="btn-grid">${btns}</div>
+  `;
+}
+
+function guard(p){
+  let valid=players.filter(x=>alive[x]&&x!==lastProtected);
+
+  if(valid.length===0){
+    game.innerHTML=`
+      <div class="player-card">
+        <div class="player-label">Awaken</div>
+        <div class="player-name">${p}</div>
+        <div class="player-role role-bao-shou">🛡️ Bao Shou</div>
+      </div>
+      <div class="game-msg"><em>No valid targets tonight.</em></div>
+      <button class="btn ghost wide" onclick="skip()">Skip turn</button>
+    `;
+    return;
+  }
+
+  let btns=valid.map(x=>`<button class="btn" onclick="setTemp('protect','${p}','${x}')">${x}</button>`).join("");
+  game.innerHTML=`
+    <div class="player-card">
+      <div class="player-label">Awaken</div>
+      <div class="player-name">${p}</div>
+      <div class="player-role role-bao-shou">🛡️ Bao Shou</div>
+    </div>
+    <div class="section-label">Choose who to protect</div>
+    <div class="btn-grid">${btns}</div>
+    <button class="btn ghost wide" onclick="skip()">Skip</button>
+  `;
+}
+
+function nuwu(p){
+  game.innerHTML=`
+    <div class="player-card">
+      <div class="player-label">Awaken</div>
+      <div class="player-name">${p}</div>
+      <div class="player-role role-nu-wu">🧙‍♀️ Nu Wu</div>
+    </div>
+    <div class="ability-row">
+      <span class="${nuwuSaveUsed?'ability-used':''}">💊 Save</span>
+      <span style="color:var(--border)">·</span>
+      <span class="${nuwuPoisonUsed?'ability-used':''}">☠️ Poison</span>
+    </div>
+    <div class="btn-grid">
+      <button class="btn${nuwuSaveUsed?' ghost':' primary'}" onclick="nuwuSave('${p}')">💊 Save</button>
+      <button class="btn${nuwuPoisonUsed?' ghost':' danger'}" onclick="poison('${p}')">☠️ Poison</button>
+      <button class="btn ghost wide" onclick="skip()">Skip</button>
+    </div>
+  `;
+}
+
+function nuwuSave(p){
+  if(nuwuSaveUsed) return nextTurn();
+  let btns=players.filter(x=>alive[x])
+    .map(x=>`<button class="btn primary" onclick="setTemp('save','${p}','${x}')">${x}</button>`).join("");
+  game.innerHTML=`
+    <div class="game-msg">💊 Who do you save?</div>
+    <div class="btn-grid">${btns}</div>
+  `;
+}
+
+function poison(p){
+  if(nuwuPoisonUsed) return nextTurn();
+  let btns=players.filter(x=>alive[x])
+    .map(x=>`<button class="btn danger" onclick="setTemp('poison','${p}','${x}')">${x}</button>`).join("");
+  game.innerHTML=`
+    <div class="game-msg">☠️ Who do you poison?</div>
+    <div class="btn-grid">${btns}</div>
+  `;
+}
+
+function detective(p){
+  let btns=players.filter(x=>alive[x])
+    .map(x=>`<button class="btn" onclick="setDetective('${x}')">${x}</button>`).join("");
+
+  game.innerHTML=`
+    <div class="player-card">
+      <div class="player-label">Awaken</div>
+      <div class="player-name">${p}</div>
+      <div class="player-role role-detective">🔍 Detective</div>
+    </div>
+    <div class="section-label">Investigate a player</div>
+    <div class="btn-grid">${btns}</div>
+  `;
+}
+
+function setDetective(t){
+  detectiveTarget=t;
+  game.innerHTML=`
+    <div class="game-msg">Investigate <strong>${t}</strong>?</div>
+    <div class="btn-grid">
+      <button class="btn primary" onclick="confirmDetective()">✓ Confirm</button>
+      <button class="btn ghost" onclick="cancel()">← Back</button>
+    </div>
+  `;
+}
+
+function confirmDetective(){
+  let res=currentRole[detectiveTarget]==="Lang Ren";
+  game.innerHTML=`
+    <div class="game-msg" style="margin-bottom:4px">Result for <strong>${detectiveTarget}</strong></div>
+    <div class="detect-result ${res?'wolf':'clear'}">
+      <div class="dr-label">${res?'WOLF DETECTED':'NOT A WOLF'}</div>
+      <div class="dr-verdict">${res?'🐺 Lang Ren':'✅ Innocent'}</div>
+    </div>
+    <button class="btn ghost wide" onclick="nextDetective()">Continue →</button>
+  `;
+}
+
+function nextDetective(){
+  turnIndex++;
+  nextTurn();
+}
+
+// ---------- TEMP ----------
+function setTemp(type,from,target=null){
+  tempAction={type,from,target};
+  confirmScreen();
+}
+
+function skip(){ turnIndex++; nextTurn(); }
+
+// ---------- DAMAGE ----------
+function damage(p){
+  lives[p]--;
+
+  if(lives[p]===1){
+    currentRole[p]=playerRoles[p].find(x=>x!==currentRole[p]);
+  }
+  else if(lives[p]<=0){
+    alive[p]=false;
+
+    if(playerRoles[p].includes("Lang Ren")){
+      langRenAlive = false;
+      showWin('village');
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// ---------- WIN SCREEN ----------
+function showWin(side){
+  if(side==='village'){
+    game.innerHTML=`
+      <div class="win-screen">
+        <div class="win-icon">🧑‍🌾</div>
+        <div class="win-title village">Villagers Win!</div>
+        <div class="win-sub">The wolf has been driven from the village.</div>
+        <button class="btn primary wide" onclick="enterNames()" style="margin-top:8px">Play Again</button>
+      </div>
+    `;
+  } else {
+    game.innerHTML=`
+      <div class="win-screen">
+        <div class="win-icon">🐺</div>
+        <div class="win-title wolf">Lang Ren Wins!</div>
+        <div class="win-sub">Darkness consumes the village.</div>
+        <button class="btn primary wide" onclick="enterNames()" style="margin-top:8px">Play Again</button>
+      </div>
+    `;
+  }
+}
+
+// ---------- NIGHT RESOLVE ----------
+function resolveNight(){
+  let kill=actions.find(a=>a.type==="kill");
+  let protect=actions.find(a=>a.type==="protect");
+  let save=actions.find(a=>a.type==="save");
+  let poison=actions.find(a=>a.type==="poison");
+
+  let log=[];
+
+  if(protect && protect.target===lastProtected){
+    protect=null;
+  }
+
+  if(kill){
+    let t=kill.target;
+
+    if(protect && protect.target===t){
+      log.push(`🛡️ <strong>${t}</strong> was protected`);
+    }
+    else if(save && save.target===t){
+      // silent save
+    }
+    else{
+      log.push(`💀 <strong>${t}</strong> was killed`);
+      if(damage(t)) return;
+    }
+  }
+
+  if(poison){
+    log.push(`☠️ <strong>${poison.target}</strong> was poisoned`);
+    if(damage(poison.target)) return;
+  }
+
+  if(protect){
+    lastProtected = protect.target;
+  }
+
+  game.innerHTML=`
+    <div class="phase-banner">
+      <div class="phase-label">Phase</div>
+      <div class="phase-title day">☀️ Dawn</div>
+    </div>
+    <div class="night-log">${log.join('<br>') || '<em>The night passed without incident.</em>'}</div>
+    <button class="btn primary wide" onclick="day()">Enter Day Phase →</button>
+  `;
+}
+
+// ---------- DAY ----------
+function day(){
+
+  if(!langRenAlive){
+    showWin('village');
+    return;
+  }
+
+  let btns=players.filter(p=>alive[p])
+    .map(p=>`<button class="btn danger" onclick="vote('${p}')">${p}</button>`).join("");
+
+  game.innerHTML=`
+    <div class="phase-banner">
+      <div class="phase-label">Phase</div>
+      <div class="phase-title day">☀️ Day — Vote</div>
+    </div>
+    <div class="game-msg"><em>The village deliberates.<br>Choose who to exile.</em></div>
+    <div class="section-label">Vote to exile</div>
+    <div class="btn-grid">${btns}</div>
+    <button class="btn ghost wide" onclick="skipVote()">Skip vote</button>
+  `;
+}
+
+function vote(p){
+  if(damage(p)) return;
+  status();
+}
+
+function skipVote(){
+  game.innerHTML=`
+    <div class="game-msg"><em>The village reached no consensus.</em></div>
+    <button class="btn primary wide" onclick="checkWin()">Continue →</button>
+  `;
+}
+
+// ---------- STATUS ----------
+function status(){
+  let rows=players.map(p=>`
+    <div class="status-row">
+      <span class="sname">${p}</span>
+      ${livePips(p)}
+      <span class="sbadge ${alive[p]?'alive':'dead'}">${alive[p]?'Alive':'Dead'}</span>
+    </div>
+  `).join('');
+
+  game.innerHTML=`
+    <div class="section-label" style="align-self:center">Village Status</div>
+    <div class="status-list">${rows}</div>
+    <button class="btn primary wide" onclick="checkWin()">Continue →</button>
+  `;
+}
+
+// ---------- WIN CHECK ----------
+function checkWin(){
+
+  if(!langRenAlive){
+    showWin('village');
+    return;
+  }
+
+  let alivePlayers=players.filter(p=>alive[p]);
+
+  let langRenCount=alivePlayers.filter(p=>currentRole[p]==="Lang Ren").length;
+  let goodCount=alivePlayers.filter(p=>currentRole[p]!=="Lang Ren").length;
+
+  if(langRenCount>=goodCount){
+    showWin('wolf');
+    return;
+  }
+
+  nightIntro();
+}
+
+// ---------- NAME ENTRY ----------
+function enterNames(){
+  game.innerHTML=`
+    <div class="phase-banner">
+      <div class="phase-label">Setup</div>
+      <div class="phase-title day">Enter Names</div>
+    </div>
+    <div class="name-inputs">
+      <div class="name-field">
+        <label>Player 1</label>
+        <input id="n1" type="text" placeholder="Enter name…" maxlength="20" />
+      </div>
+      <div class="name-field">
+        <label>Player 2</label>
+        <input id="n2" type="text" placeholder="Enter name…" maxlength="20" />
+      </div>
+      <div class="name-field">
+        <label>Player 3</label>
+        <input id="n3" type="text" placeholder="Enter name…" maxlength="20" />
+      </div>
+    </div>
+    <button class="btn primary wide" onclick="confirmNames()">Continue →</button>
+  `;
+  document.getElementById('n1').focus();
+}
+
+function confirmNames(){
+  const n1 = document.getElementById('n1').value.trim() || "Player 1";
+  const n2 = document.getElementById('n2').value.trim() || "Player 2";
+  const n3 = document.getElementById('n3').value.trim() || "Player 3";
+  players[0]=n1; players[1]=n2; players[2]=n3;
+  startGame();
+}
+
+// ---------- START SCREEN ----------
+game.innerHTML=`
+  <div class="phase-banner">
+    <div class="phase-label">Welcome to</div>
+    <div class="phase-title wolf">Lang Ren Sha</div>
+  </div>
+  <div class="game-msg"><em>3 players · 6 roles · one wolf among you.</em></div>
+  <button class="btn primary wide" onclick="enterNames()">Begin Game</button>
+`;
+</script>
+
+</body>
+</html>
